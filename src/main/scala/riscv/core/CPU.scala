@@ -40,6 +40,17 @@ class CPU extends Module {
 
   // lab3(cpu) begin
 
+  // EX
+  ex.io.reg1_data := regs.io.read_data1
+  ex.io.reg2_data := regs.io.read_data2
+
+  ex.io.instruction_address := inst_fetch.io.instruction_address
+  ex.io.instruction := inst_fetch.io.instruction
+
+  ex.io.aluop1_source := id.io.ex_aluop1_source
+  ex.io.aluop2_source := id.io.ex_aluop2_source
+  ex.io.immediate := id.io.ex_immediate
+
   // lab3(cpu) end
 
   mem.io.alu_result          := ex.io.mem_alu_result

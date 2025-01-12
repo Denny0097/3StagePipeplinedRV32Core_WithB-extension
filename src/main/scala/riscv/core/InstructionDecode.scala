@@ -8,7 +8,7 @@ import scala.collection.immutable.ArraySeq
 import chisel3._
 import chisel3.util._
 import riscv.Parameters
-
+// ------- OPcode ---------
 object InstructionTypes {
   val L  = "b0000011".U
   val I  = "b0010011".U
@@ -26,7 +26,10 @@ object Instructions {
   val csr   = "b1110011".U
   val fence = "b0001111".U
 }
+// -----------------------
 
+
+// ------- Funct3 ---------
 object InstructionsTypeL {
   val lb  = "b000".U
   val lh  = "b001".U
@@ -34,6 +37,7 @@ object InstructionsTypeL {
   val lbu = "b100".U
   val lhu = "b101".U
 }
+// -----------------------
 
 object InstructionsTypeI {
   val addi  = 0.U
@@ -51,6 +55,18 @@ object InstructionsTypeS {
   val sh = "b001".U
   val sw = "b010".U
 }
+
+// Funct7  Funct3
+// 0000000 000 : add
+// 0100000 000 : sub
+// 0000000 001 : sll
+// 0000000 010 : slt
+// 0000000 011 : sltu
+// 0000000 100 : xor
+// 0000000 101 : srl
+// 0100000 101 : sra
+// 0000000 110 : or
+// 0000000 111 : and
 
 object InstructionsTypeR {
   val add_sub = 0.U
@@ -91,6 +107,8 @@ object InstructionsTypeCSR {
   val csrrsi = "b110".U
   val csrrci = "b111".U
 }
+
+// B-extension
 
 object InstructionsNop {
   val nop = 0x00000013L.U(Parameters.DataWidth)
@@ -147,6 +165,7 @@ class InstructionDecode extends Module {
 
   io.regs_reg1_read_address := Mux(opcode === Instructions.lui, 0.U(Parameters.PhysicalRegisterAddrWidth), rs1)
   io.regs_reg2_read_address := rs2
+  // Imm sel
   val immediate = MuxLookup(
     opcode,
     Cat(Fill(20, io.instruction(31)), io.instruction(31, 20)),
@@ -174,6 +193,16 @@ class InstructionDecode extends Module {
       )
     )
   )
+
+  // ALU op1 from addr : B-Type,
+  //                     auipc,
+  //                     jal
+  // ALU op1 from reg  : L-Type (I-type subtype),
+  //                     I-type (nop=addi, jalr, csr-class, fence),
+  //                     J-type (jal),
+  //                     U-type (lui, auipc),
+  //                     S-type 
+  //                     
   io.ex_immediate := immediate
   io.ex_aluop1_source := Mux(
     opcode === Instructions.auipc || opcode === InstructionTypes.B || opcode === Instructions.jal,
@@ -196,6 +225,9 @@ class InstructionDecode extends Module {
 
   // lab3(InstructionDecode) begin
 
+  io.memory_read_enable := (opcode === Instructions.lui) || (opcode === InstructionTypes.L)
+  io.memory_write_enable:= opcode === InstructionTypes.S
+    
   // lab3(InstructionDecode) end
 
   io.wb_reg_write_source := MuxCase(

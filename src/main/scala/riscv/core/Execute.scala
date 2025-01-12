@@ -38,8 +38,27 @@ class Execute extends Module {
 
   // lab3(Execute) begin
 
-  // lab3(Execute) end
+  // alu
+  alu.io.func := alu_ctrl.io.alu_funct
+  // Src judge
+  when(!io.aluop1_source){
+    alu.io.op1 := io.reg1_data
+  }
+  .otherwise {
+    alu.io.op1 := io.instruction_address
+  }
 
+  // op2
+  when(!io.aluop2_source){
+    alu.io.op2 := io.reg2_data
+  }
+  .otherwise {
+    alu.io.op2 := io.immediate
+  }
+  // lab3(Execute) end
+  
+  
+  // -------Jump judge-------
   io.mem_alu_result := alu.io.result
   io.if_jump_flag := opcode === Instructions.jal ||
     (opcode === Instructions.jalr) ||
@@ -55,5 +74,8 @@ class Execute extends Module {
         InstructionsTypeB.bgeu -> (io.reg1_data.asUInt >= io.reg2_data.asUInt)
       )
     )
+    // ---------------------
+
+    // JunpAddr
   io.if_jump_address := io.immediate + Mux(opcode === Instructions.jalr, io.reg1_data, io.instruction_address)
 }
