@@ -7,6 +7,7 @@ import chisel3._
 import chisel3.util.Cat
 import chisel3.util.MuxLookup
 import riscv.Parameters
+import riscv.core.InstructionDecode
 
 class Execute extends Module {
   val io = IO(new Bundle {
@@ -41,20 +42,9 @@ class Execute extends Module {
   // alu
   alu.io.func := alu_ctrl.io.alu_funct
   // Src judge
-  when(!io.aluop1_source){
-    alu.io.op1 := io.reg1_data
-  }
-  .otherwise {
-    alu.io.op1 := io.instruction_address
-  }
+  alu.io.op1 := Mux(io.aluop1_source === ALUOp1Source.Register,io.reg1_data,io.instruction_address)
+  alu.io.op2 := Mux(io.aluop2_source === ALUOp2Source.Register,io.reg2_data,io.immediate)
 
-  // op2
-  when(!io.aluop2_source){
-    alu.io.op2 := io.reg2_data
-  }
-  .otherwise {
-    alu.io.op2 := io.immediate
-  }
   // lab3(Execute) end
   
   
