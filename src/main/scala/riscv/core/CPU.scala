@@ -18,6 +18,29 @@ class CPU extends Module {
   val mem        = Module(new MemoryAccess)
   val wb         = Module(new WriteBack)
 
+
+
+  // --- ID/EX 暫存器 ---
+  val id_ex_pc            = RegInit(0.U(32.W))
+  val id_ex_reg1_data     = RegInit(0.U(32.W))
+  val id_ex_reg2_data     = RegInit(0.U(32.W))
+  val id_ex_imm           = RegInit(0.U(32.W))
+  val id_ex_aluop1_source = RegInit(false.B)
+  val id_ex_aluop2_source = RegInit(false.B)
+  val id_ex_instruction    = RegInit(0.U(32.W))
+
+
+  
+  // --- EX/WB 暫存器 ---
+  val ex_mem_alu_result = RegInit(0.U(32.W))
+  val ex_mem_reg2_data  = RegInit(0.U(32.W))
+  val ex_mem_pc         = RegInit(0.U(32.W))
+ 
+  val ex_wb_JumpFlag = RegInit(Bool())
+  val ex_wb_JunpAddr = RegInit(0.U(32.W))
+
+
+
   io.deviceSelect := mem.io.memory_bundle
     .address(Parameters.AddrBits - 1, Parameters.AddrBits - Parameters.SlaveDeviceCountBits)
 
