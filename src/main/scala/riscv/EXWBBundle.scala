@@ -15,5 +15,8 @@ class EXWBBundle extends Bundle {
   val alu_result        = UInt(Parameters.InstructionWidth)
   val reg_write_source  = UInt(2.W)
   val mem_write_enable  = Bool()
-  val mem_read_enalbe   = Bool()
+  val mem_read_enable   = Bool()
+  val reg_write_enable  = Bool()
+  val reg_write_address = UInt(Parameters.InstructionWidth)
+
 }

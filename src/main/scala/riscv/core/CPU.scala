@@ -61,9 +61,36 @@ class CPU extends Module {
   fd_ex.aluop2_source := id.io.ex_aluop2_source
   fd_ex.reg_write_source := id.io.wb_reg_write_source
   fd_ex.mem_write_enable := id.io.memory_write_enable
-  fd_ex.mem_read_enalbe := id.io.memory_read_enable
+  fd_ex.mem_read_enable := id.io.memory_read_enable
+  fd_ex.reg_write_enable := regs.io.write_enable
+  fd_ex.reg_write_address := regs.io.write_address
+  fd_ex.reg_read_address1 := regs.io.read_address1
+  fd_ex.reg_read_address2 := regs.io.read_address2
 
   
+  // forwarding
+  when(ex_wb.reg_write_enable && (ex_wb.reg_write_address === fd_ex.reg_read_address1)) {
+    when(ex_wb.mem_read_enable) {
+      // stall for ld-inst
+      ex.io.reg1_data := mem.io.wb_memory_read_data
+    }.otherwise {
+      ex.io.reg1_data := ex_wb.alu_result
+    }
+  }.otherwise {
+    ex.io.reg1_data := fd_ex.reg1_data
+  }
+  
+  when(ex_wb.reg_write_enable && (ex_wb.reg_write_address === fd_ex.reg_read_address2)) {
+    when(ex_wb.mem_read_enable) {
+      // stall for ld-inst
+      ex.io.reg2_data := mem.io.wb_memory_read_data
+    }.otherwise {
+      ex.io.reg2_data := ex_wb.alu_result
+    }
+  }.otherwise {
+    ex.io.reg2_data := fd_ex.reg2_data
+  }
+
   // EX
   ex.io.reg1_data := fd_ex.reg1_data
   ex.io.reg2_data := fd_ex.reg2_data
@@ -84,8 +111,9 @@ class CPU extends Module {
   ex_wb.alu_result := ex.io.mem_alu_result
   ex_wb.reg_write_source := fd_ex.reg_write_source
   ex_wb.mem_write_enable := fd_ex.mem_write_enable
-  ex_wb.mem_read_enalbe := fd_ex.mem_read_enalbe
-
+  ex_wb.mem_read_enable := fd_ex.mem_read_enable
+  ex_wb.reg_write_enable := fd_ex.reg_write_enable
+  ex_wb.reg_write_address := fd_ex.reg_write_address
 
   // MEM
   
@@ -94,7 +122,7 @@ class CPU extends Module {
   mem.io.reg2_data           := ex_wb.reg2_rd
   
   mem.io.memory_write_enable := ex_wb.mem_write_enable
-  mem.io.memory_read_enable  := ex_wb.mem_read_enalbe
+  mem.io.memory_read_enable  := ex_wb.mem_read_enable
 
   io.memory_bundle.address := Cat(
     0.U(Parameters.SlaveDeviceCountBits.W),
