@@ -22,6 +22,7 @@ class Execute extends Module {
     val mem_alu_result  = Output(UInt(Parameters.DataWidth))
     val if_jump_flag    = Output(Bool())
     val if_jump_address = Output(UInt(Parameters.DataWidth))
+
   })
 
   val opcode = io.instruction(6, 0)

@@ -7,9 +7,14 @@ import chisel3._
 import chisel3.util.Cat
 import riscv.CPUBundle
 import riscv.Parameters
+import riscv.FDEXBundle
+import riscv.EXWBBundle
 
 class CPU extends Module {
   val io = IO(new CPUBundle)
+  val fd_ex = RegInit(0.U.asTypeOf(new FDEXBundle))
+  val ex_wb = RegInit(0.U.asTypeOf(new EXWBBundle))
+
 
   val regs       = Module(new RegisterFile)
   val inst_fetch = Module(new InstructionFetch)
@@ -17,27 +22,6 @@ class CPU extends Module {
   val ex         = Module(new Execute)
   val mem        = Module(new MemoryAccess)
   val wb         = Module(new WriteBack)
-
-
-
-  // --- ID/EX 暫存器 ---
-  val id_ex_pc            = RegInit(0.U(32.W))
-  val id_ex_reg1_data     = RegInit(0.U(32.W))
-  val id_ex_reg2_data     = RegInit(0.U(32.W))
-  val id_ex_imm           = RegInit(0.U(32.W))
-  val id_ex_aluop1_source = RegInit(false.B)
-  val id_ex_aluop2_source = RegInit(false.B)
-  val id_ex_instruction    = RegInit(0.U(32.W))
-
-
-  
-  // --- EX/WB 暫存器 ---
-  val ex_mem_alu_result = RegInit(0.U(32.W))
-  val ex_mem_reg2_data  = RegInit(0.U(32.W))
-  val ex_mem_pc         = RegInit(0.U(32.W))
- 
-  val ex_wb_JumpFlag = RegInit(Bool())
-  val ex_wb_JunpAddr = RegInit(0.U(32.W))
 
 
 
@@ -65,24 +49,52 @@ class CPU extends Module {
   id.io.instruction := inst_fetch.io.instruction
 
 
+
+
+  // -----------------(pipeline)FDEX register---------------------
+  fd_ex.inst_addr := regs.io.write_address
+  fd_ex.instruction := id.io.instruction
+  fd_ex.reg1_data := regs.io.read_address1
+  fd_ex.reg2_data := regs.io.read_address2
+  fd_ex.imm :=  id.io.ex_immediate
+  fd_ex.aluop1_source := id.io.ex_aluop1_source
+  fd_ex.aluop2_source := id.io.ex_aluop2_source
+  fd_ex.reg_write_source := id.io.wb_reg_write_source
+  fd_ex.mem_write_enable := id.io.memory_write_enable
+  fd_ex.mem_read_enalbe := id.io.memory_read_enable
+
+  
   // EX
-  ex.io.reg1_data := regs.io.read_data1
-  ex.io.reg2_data := regs.io.read_data2
+  ex.io.reg1_data := fd_ex.reg1_data
+  ex.io.reg2_data := fd_ex.reg2_data
 
-  ex.io.instruction_address := inst_fetch.io.instruction_address
-  ex.io.instruction := inst_fetch.io.instruction
+  ex.io.instruction_address := fd_ex.inst_addr
+  ex.io.instruction := fd_ex.instruction
 
-  ex.io.aluop1_source := id.io.ex_aluop1_source
-  ex.io.aluop2_source := id.io.ex_aluop2_source
-  ex.io.immediate := id.io.ex_immediate
+  ex.io.aluop1_source := fd_ex.aluop1_source
+  ex.io.aluop2_source := fd_ex.aluop2_source
+  ex.io.immediate := fd_ex.imm
+
+
+  // -------------------(pipeline)FDEX register-------------------
+  ex_wb.inst_addr := ex.io.instruction_address
+  ex_wb.instruction := ex.io.instruction
+  ex_wb.reg2_rd := ex.io.reg2_data
+  ex_wb.jumpflag := ex.io.if_jump_flag
+  ex_wb.alu_result := ex.io.mem_alu_result
+  ex_wb.reg_write_source := fd_ex.reg_write_source
+  ex_wb.mem_write_enable := fd_ex.mem_write_enable
+  ex_wb.mem_read_enalbe := fd_ex.mem_read_enalbe
 
 
   // MEM
-  mem.io.alu_result          := ex.io.mem_alu_result
-  mem.io.reg2_data           := regs.io.read_data2
-  mem.io.memory_read_enable  := id.io.memory_read_enable
-  mem.io.memory_write_enable := id.io.memory_write_enable
-  mem.io.funct3              := inst_fetch.io.instruction(14, 12)
+  
+  mem.io.funct3              := ex_wb.instruction(14, 12)
+  mem.io.alu_result          := ex_wb.alu_result
+  mem.io.reg2_data           := ex_wb.reg2_rd
+  
+  mem.io.memory_write_enable := ex_wb.mem_write_enable
+  mem.io.memory_read_enable  := ex_wb.mem_read_enalbe
 
   io.memory_bundle.address := Cat(
     0.U(Parameters.SlaveDeviceCountBits.W),
@@ -95,8 +107,8 @@ class CPU extends Module {
 
 
   // WB
-  wb.io.instruction_address := inst_fetch.io.instruction_address
-  wb.io.alu_result          := ex.io.mem_alu_result
+  wb.io.instruction_address := ex_wb.inst_addr
+  wb.io.alu_result          := ex_wb.alu_result
   wb.io.memory_read_data    := mem.io.wb_memory_read_data
-  wb.io.regs_write_source   := id.io.wb_reg_write_source
+  wb.io.regs_write_source   := ex_wb.reg_write_source
 }
