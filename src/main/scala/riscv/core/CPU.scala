@@ -23,12 +23,24 @@ class CPU extends Module {
   val mem        = Module(new MemoryAccess)
   val wb         = Module(new WriteBack)
 
+  // Control signal
+  val stall = Wire(Bool()) // 用於 Data Hazard
+  val flush = Wire(Bool()) // 用於 Control Hazard
+  stall := false.B 
+  flush := false.B 
+  
+  when(flush) {
+    stall := true.B
+  }.otherwise {
+    stall := false.B
+  }
 
 
+  // deviceSelect
   io.deviceSelect := mem.io.memory_bundle
     .address(Parameters.AddrBits - 1, Parameters.AddrBits - Parameters.SlaveDeviceCountBits)
 
-  // IF
+  // IF-------------------
   inst_fetch.io.jump_address_id       := ex.io.if_jump_address
   inst_fetch.io.jump_flag_id          := ex.io.if_jump_flag
   inst_fetch.io.instruction_valid     := io.instruction_valid
@@ -36,7 +48,7 @@ class CPU extends Module {
   io.instruction_address              := inst_fetch.io.instruction_address
 
 
-  // ID
+  // ID-------------------
   regs.io.write_enable  := id.io.reg_write_enable
   regs.io.write_address := id.io.reg_write_address
   regs.io.write_data    := wb.io.regs_write_data
@@ -48,52 +60,60 @@ class CPU extends Module {
 
   id.io.instruction := inst_fetch.io.instruction
 
-
-
+  // Control Hazard: 分支或跳轉刷新
+  when(ex.io.if_jump_flag) {
+    flush := true.B
+    fd_ex := 0.U.asTypeOf(new FDEXBundle) // 清空 FD_EX 暫存器
+  }.otherwise {
+    flush := false.B
+  }
 
   // -----------------(pipeline)FDEX register---------------------
-  fd_ex.inst_addr := regs.io.write_address
-  fd_ex.instruction := id.io.instruction
-  fd_ex.reg1_data := regs.io.read_address1
-  fd_ex.reg2_data := regs.io.read_address2
-  fd_ex.imm :=  id.io.ex_immediate
-  fd_ex.aluop1_source := id.io.ex_aluop1_source
-  fd_ex.aluop2_source := id.io.ex_aluop2_source
-  fd_ex.reg_write_source := id.io.wb_reg_write_source
-  fd_ex.mem_write_enable := id.io.memory_write_enable
-  fd_ex.mem_read_enable := id.io.memory_read_enable
-  fd_ex.reg_write_enable := regs.io.write_enable
-  fd_ex.reg_write_address := regs.io.write_address
-  fd_ex.reg_read_address1 := regs.io.read_address1
-  fd_ex.reg_read_address2 := regs.io.read_address2
+  when(stall) {
+    // remaind fd reg, if stall
+    fd_ex := fd_ex
+  }.elsewhen(flush) { //flush fd reg if control harzard
+    fd_ex := 0.U.asTypeOf(new FDEXBundle)
+  }.otherwise {
+    fd_ex.inst_addr := regs.io.write_address
+    fd_ex.instruction := id.io.instruction
+    fd_ex.reg1_data := regs.io.read_address1
+    fd_ex.reg2_data := regs.io.read_address2
+    fd_ex.imm := id.io.ex_immediate
+    fd_ex.aluop1_source := id.io.ex_aluop1_source
+    fd_ex.aluop2_source := id.io.ex_aluop2_source
+    fd_ex.reg_write_source := id.io.wb_reg_write_source
+    fd_ex.mem_write_enable := id.io.memory_write_enable
+    fd_ex.mem_read_enable := id.io.memory_read_enable
+    fd_ex.reg_write_enable := regs.io.write_enable
+    fd_ex.reg_write_address := regs.io.write_address
+    fd_ex.reg_read_address1 := regs.io.read_address1
+    fd_ex.reg_read_address2 := regs.io.read_address2
+  }
+  //--------------------------------------
 
-  
+
+  // EX-------------------
   // forwarding
   when(ex_wb.reg_write_enable && (ex_wb.reg_write_address === fd_ex.reg_read_address1)) {
     when(ex_wb.mem_read_enable) {
-      // stall for ld-inst
-      ex.io.reg1_data := mem.io.wb_memory_read_data
+      stall := true.B // Load-Use 冒險停頓
     }.otherwise {
-      ex.io.reg1_data := ex_wb.alu_result
+      ex.io.reg1_data := ex_wb.alu_result // 前遞自 MEM/WB 階段
     }
   }.otherwise {
-    ex.io.reg1_data := fd_ex.reg1_data
+    ex.io.reg1_data := fd_ex.reg1_data // 無冒險，正常取數據
   }
-  
+    
   when(ex_wb.reg_write_enable && (ex_wb.reg_write_address === fd_ex.reg_read_address2)) {
     when(ex_wb.mem_read_enable) {
-      // stall for ld-inst
-      ex.io.reg2_data := mem.io.wb_memory_read_data
+      stall := true.B // data hazard stall
     }.otherwise {
       ex.io.reg2_data := ex_wb.alu_result
     }
   }.otherwise {
     ex.io.reg2_data := fd_ex.reg2_data
   }
-
-  // EX
-  ex.io.reg1_data := fd_ex.reg1_data
-  ex.io.reg2_data := fd_ex.reg2_data
 
   ex.io.instruction_address := fd_ex.inst_addr
   ex.io.instruction := fd_ex.instruction
@@ -114,9 +134,10 @@ class CPU extends Module {
   ex_wb.mem_read_enable := fd_ex.mem_read_enable
   ex_wb.reg_write_enable := fd_ex.reg_write_enable
   ex_wb.reg_write_address := fd_ex.reg_write_address
-
-  // MEM
+  // --------------------------------------
   
+
+  // MEM-------------------
   mem.io.funct3              := ex_wb.instruction(14, 12)
   mem.io.alu_result          := ex_wb.alu_result
   mem.io.reg2_data           := ex_wb.reg2_rd
@@ -134,7 +155,7 @@ class CPU extends Module {
   mem.io.memory_bundle.read_data := io.memory_bundle.read_data
 
 
-  // WB
+  // WB-------------------
   wb.io.instruction_address := ex_wb.inst_addr
   wb.io.alu_result          := ex_wb.alu_result
   wb.io.memory_read_data    := mem.io.wb_memory_read_data
