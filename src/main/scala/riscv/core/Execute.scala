@@ -7,7 +7,6 @@ import chisel3._
 import chisel3.util.Cat
 import chisel3.util.MuxLookup
 import riscv.Parameters
-import riscv.core.InstructionDecode
 
 class Execute extends Module {
   val io = IO(new Bundle {
@@ -21,8 +20,7 @@ class Execute extends Module {
 
     val mem_alu_result  = Output(UInt(Parameters.DataWidth))
     val if_jump_flag    = Output(Bool())
-    val if_jump_address = Output(UInt(Parameters.DataWidth))
-
+    val if_jump_address = Output(UInt(Parameters.DataWidth))    
   })
 
   val opcode = io.instruction(6, 0)

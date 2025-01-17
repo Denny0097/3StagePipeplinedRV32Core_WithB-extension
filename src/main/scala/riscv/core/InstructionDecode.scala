@@ -225,7 +225,7 @@ class InstructionDecode extends Module {
 
   // lab3(InstructionDecode) begin
 
-  io.memory_read_enable := (opcode === Instructions.lui) || (opcode === InstructionTypes.L)
+  io.memory_read_enable := opcode === InstructionTypes.L
   io.memory_write_enable:= opcode === InstructionTypes.S
     
   // lab3(InstructionDecode) end

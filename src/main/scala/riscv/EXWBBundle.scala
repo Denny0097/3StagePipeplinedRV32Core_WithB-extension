@@ -8,15 +8,15 @@ import peripheral.RAMBundle
 
 
 class EXWBBundle extends Bundle {
-  val inst_addr         = UInt(Parameters.InstructionWidth)
-  val instruction       = UInt(Parameters.InstructionWidth)
-  val reg2_rd           = UInt(Parameters.InstructionWidth)
-  val jumpflag          = Bool()
-  val alu_result        = UInt(Parameters.InstructionWidth)
-  val reg_write_source  = UInt(2.W)
-  val mem_write_enable  = Bool()
-  val mem_read_enable   = Bool()
-  val reg_write_enable  = Bool()
-  val reg_write_address = UInt(Parameters.InstructionWidth)
-
+  val instruction_address = UInt(Parameters.AddrWidth)
+  val instruction         = UInt(Parameters.InstructionWidth)
+  val read_data2          = UInt(Parameters.DataWidth)
+  val jump_flag           = Bool()
+  val if_jump_address     = UInt(Parameters.DataWidth)
+  val alu_result          = UInt(Parameters.DataWidth)
+  val memory_read_enable  = Bool()
+  val memory_write_enable = Bool()  
+  val reg_write_source    = UInt(2.W)
+  val reg_write_enable    = Bool()
+  val reg_write_address   = UInt(Parameters.PhysicalRegisterAddrWidth)
 }

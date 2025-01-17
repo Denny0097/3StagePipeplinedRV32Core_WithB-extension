@@ -64,7 +64,7 @@ class TestTopModule(exeFilename: String) extends Module {
 }
 
 class FibonacciTest extends AnyFlatSpec with ChiselScalatestTester {
-  behavior.of("Single Cycle CPU")
+  behavior.of("Pipeline CPU")
   it should "recursively calculate Fibonacci(10)" in {
     test(new TestTopModule("fibonacci.asmbin")).withAnnotations(TestAnnotations.annos) { c =>
       for (i <- 1 to 50) {
@@ -80,7 +80,7 @@ class FibonacciTest extends AnyFlatSpec with ChiselScalatestTester {
 }
 
 class QuicksortTest extends AnyFlatSpec with ChiselScalatestTester {
-  behavior.of("Single Cycle CPU")
+  behavior.of("Pipeline CPU")
   it should "perform a quicksort on 10 numbers" in {
     test(new TestTopModule("quicksort.asmbin")).withAnnotations(TestAnnotations.annos) { c =>
       for (i <- 1 to 50) {
@@ -97,7 +97,7 @@ class QuicksortTest extends AnyFlatSpec with ChiselScalatestTester {
 }
 
 class ByteAccessTest extends AnyFlatSpec with ChiselScalatestTester {
-  behavior.of("Single Cycle CPU")
+  behavior.of("Pipeline CPU")
   it should "store and load a single byte" in {
     test(new TestTopModule("sb.asmbin")).withAnnotations(TestAnnotations.annos) { c =>
       for (i <- 1 to 500) {
