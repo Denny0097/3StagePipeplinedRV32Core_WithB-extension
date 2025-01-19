@@ -108,6 +108,25 @@ object InstructionsTypeCSR {
   val csrrci = "b111".U
 }
 
+object InstructionsTypeB_Extesntion_Zba {
+  val sh1add  = "b001".U
+  // ...
+}
+
+object InstructionsTypeB_Extesntion_Zbb {
+  val sh1add  = "b001".U
+  // ...
+}
+
+object InstructionsTypeB_Extesntion_Zbc {
+  val sh1add  = "b001".U
+  // ...
+}
+
+object InstructionsTypeB_Extesntion_Zbz {
+  val sh1add  = "b001".U
+  // ...
+}
 // B-extension
 
 object InstructionsNop {

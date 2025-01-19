@@ -67,7 +67,6 @@ class CPU extends Module {
   ex.io.instruction         := fd_ex.instruction
   ex.io.instruction_address := fd_ex.instruction_address
   
-  val reg2data = Wire(UInt(Parameters.DataWidth))
   when(ex_wb.reg_write_enable && (ex_wb.reg_write_address === fd_ex.reg_read_address1)) {
     when(ex_wb.memory_read_enable) {
       ex.io.reg1_data := mem.io.wb_memory_read_data
@@ -79,14 +78,13 @@ class CPU extends Module {
   }
   when(ex_wb.reg_write_enable && (ex_wb.reg_write_address === fd_ex.reg_read_address2)) {
     when(ex_wb.memory_read_enable) {
-      reg2data := mem.io.wb_memory_read_data
+      ex.io.reg2_data := mem.io.wb_memory_read_data
     }.otherwise {
-      reg2data := ex_wb.mem_alu_result
+      ex.io.reg2_data := ex_wb.mem_alu_result
     }
   }.otherwise {
-    reg2data := regs.io.read_data2
+    ex.io.reg2_data := regs.io.read_data2
   }
-  ex.io.reg2_data           := reg2data
   ex.io.immediate           := fd_ex.immediate
   ex.io.aluop1_source       := fd_ex.ex_aluop1_source
   ex.io.aluop2_source       := fd_ex.ex_aluop2_source
@@ -100,23 +98,20 @@ class CPU extends Module {
   ex_wb.reg2_data           := reg2data
   // ex_wb.if_jump_flag        := ex.io.if_jump_flag
   ex_wb.if_jump_address     := ex.io.if_jump_address
-  ex_wb.stall               := fd_ex.stall || ex_wb.if_jump_flag //second stall
+
+  ex_wb.wb_reg_write_source := fd_ex.wb_reg_write_source
+  ex_wb.memory_read_enable  := fd_ex.memory_read_enable
+  ex_wb.reg_write_address   := fd_ex.reg_write_address
 
   //disable regWE&memWE
   when(fd_ex.stall || ex_wb.if_jump_flag) {
     ex_wb.if_jump_flag        := false.B
-    ex_wb.memory_read_enable  := fd_ex.memory_read_enable
-    ex_wb.wb_reg_write_source    := fd_ex.wb_reg_write_source
-    ex_wb.reg_write_address   := fd_ex.reg_write_address
     ex_wb.reg_write_enable    := false.B
     ex_wb.memory_write_enable := false.B
   }.otherwise {
     // ex_wb.wbcontrol := fd_ex.wbcontrol
-    ex_wb.memory_read_enable  := fd_ex.memory_read_enable
     ex_wb.memory_write_enable := fd_ex.memory_write_enable
-    ex_wb.wb_reg_write_source    := fd_ex.wb_reg_write_source
     ex_wb.reg_write_enable    := fd_ex.reg_write_enable
-    ex_wb.reg_write_address   := fd_ex.reg_write_address
     ex_wb.if_jump_flag        := ex.io.if_jump_flag
   }
 

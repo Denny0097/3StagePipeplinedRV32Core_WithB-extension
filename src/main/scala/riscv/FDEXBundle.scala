@@ -7,13 +7,13 @@ import chisel3._
 import peripheral.RAMBundle
 
 class FDEXBundle extends Bundle {
-val instruction         = UInt(Parameters.InstructionWidth)
 val instruction_address = UInt(Parameters.AddrWidth)
+val instruction         = UInt(Parameters.InstructionWidth)
+val reg_read_address1   = UInt(Parameters.PhysicalRegisterAddrWidth)
+val reg_read_address2   = UInt(Parameters.PhysicalRegisterAddrWidth)
 val immediate           = UInt(Parameters.DataWidth)
 val ex_aluop1_source       = UInt(1.W)
 val ex_aluop2_source       = UInt(1.W)
-val reg_read_address1   = UInt(Parameters.PhysicalRegisterAddrWidth)
-val reg_read_address2   = UInt(Parameters.PhysicalRegisterAddrWidth)
 val stall               = Bool()
   
 val memory_read_enable  = Bool()
