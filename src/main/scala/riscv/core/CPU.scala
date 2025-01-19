@@ -95,7 +95,7 @@ class CPU extends Module {
   ex_wb.instruction         := fd_ex.instruction
   ex_wb.instruction_address := fd_ex.instruction_address
   ex_wb.mem_alu_result      := ex.io.mem_alu_result
-  ex_wb.reg2_data           := reg2data
+  ex_wb.reg2_data           := ex.io.reg2_data
   // ex_wb.if_jump_flag        := ex.io.if_jump_flag
   ex_wb.if_jump_address     := ex.io.if_jump_address
 
