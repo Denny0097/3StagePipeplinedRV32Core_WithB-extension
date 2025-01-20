@@ -11,6 +11,7 @@ class ALUControl extends Module {
     val opcode = Input(UInt(7.W))
     val funct3 = Input(UInt(3.W))
     val funct7 = Input(UInt(7.W))
+    val shamt  = Input(UInt(5.W))
 
     val alu_funct = Output(ALUFunctions())
   })
@@ -18,7 +19,7 @@ class ALUControl extends Module {
   io.alu_funct := ALUFunctions.zero
 
   switch(io.opcode) {
-    is(InstructionTypes.I) {
+    is(InstructionTypes.IBex) {
       io.alu_funct := MuxLookup(
         io.funct3,
         ALUFunctions.zero,

@@ -11,9 +11,9 @@ import riscv.Parameters
 // ------- OPcode ---------
 object InstructionTypes {
   val L  = "b0000011".U
-  val I  = "b0010011".U
+  val IBex  = "b0010011".U
   val S  = "b0100011".U
-  val RM = "b0110011".U
+  val RMBex = "b0110011".U
   val B  = "b1100011".U
 }
 
@@ -41,13 +41,17 @@ object InstructionsTypeL {
 
 object InstructionsTypeI {
   val addi  = 0.U
-  val slli  = 1.U
+  val slli  = 1.U // or clz, ctz, cpop, sext.b, sext.h, bclr, binvi, bset,
   val slti  = 2.U
   val sltiu = 3.U
   val xori  = 4.U
-  val sri   = 5.U
+  val sri   = 5.U // or rori, orc.b, rev8, bexti
   val ori   = 6.U
   val andi  = 7.U
+  val Zba   = 8.U
+  val Zbb   = 9.U
+  val Zbc   = 10.U
+  val Zbz   = 11.U
 }
 
 object InstructionsTypeS {
@@ -70,13 +74,13 @@ object InstructionsTypeS {
 
 object InstructionsTypeR {
   val add_sub = 0.U
-  val sll     = 1.U
-  val slt     = 2.U
-  val sltu    = 3.U
-  val xor     = 4.U
-  val sr      = 5.U
-  val or      = 6.U
-  val and     = 7.U
+  val sll     = 1.U // or rol, clmul, bclr, binv, bset, 
+  val slt     = 2.U // or sh1add, clmulr
+  val sltu    = 3.U // or clmulh
+  val xor     = 4.U // or sh2add, xnor, min, zext.h
+  val sr      = 5.U // or minu, ror, bext, 
+  val or      = 6.U // or sh3add, orn, max
+  val and     = 7.U // or andn, maxu
 }
 
 object InstructionsTypeM {
@@ -108,13 +112,32 @@ object InstructionsTypeCSR {
   val csrrci = "b111".U
 }
 
+object Zbb1 { 
+  // shamt
+  val clz    = "b00000".U
+  val ctz    = "b00001".U
+  val cpop   = "b00010".U
+  val sextb  = "b00100".U
+  val sexth  = "b00101".U
+  val orcb   = "b00111".U
+  val rev8   = "b11000".U
+}
+
+
+object Zbb2 { // funct3 === 101, 
+  // funct7
+  val rori    = "0110000".U
+  val ctz     = ""
+
+}
+
 object InstructionsTypeB_Extesntion_Zba {
-  val sh1add  = "b001".U
-  // ...
+  val sh1add  = "b010".U
+  val sh1add  = "b100".U
+  val sh1add  = "b110".U
 }
 
 object InstructionsTypeB_Extesntion_Zbb {
-  val sh1add  = "b001".U
   // ...
 }
 
@@ -189,7 +212,7 @@ class InstructionDecode extends Module {
     opcode,
     Cat(Fill(20, io.instruction(31)), io.instruction(31, 20)),
     IndexedSeq(
-      InstructionTypes.I -> Cat(Fill(21, io.instruction(31)), io.instruction(30, 20)),
+      InstructionTypes.IBex -> Cat(Fill(21, io.instruction(31)), io.instruction(30, 20)),
       InstructionTypes.L -> Cat(Fill(21, io.instruction(31)), io.instruction(30, 20)),
       Instructions.jalr  -> Cat(Fill(21, io.instruction(31)), io.instruction(30, 20)),
       InstructionTypes.S -> Cat(Fill(21, io.instruction(31)), io.instruction(30, 25), io.instruction(11, 7)),
@@ -237,7 +260,7 @@ class InstructionDecode extends Module {
   //                   S-type (rs2 value sent to MemControl, ALU computes rs1 + imm.)
   //                   B-type (rs2 compares with rs1 in jump judge unit, ALU computes jump address PC+imm.)
   io.ex_aluop2_source := Mux(
-    opcode === InstructionTypes.RM,
+    opcode === InstructionTypes.RMBex,
     ALUOp2Source.Register,
     ALUOp2Source.Immediate
   )
@@ -252,14 +275,14 @@ class InstructionDecode extends Module {
   io.wb_reg_write_source := MuxCase(
     RegWriteSource.ALUResult,
     ArraySeq(
-      (opcode === InstructionTypes.RM || opcode === InstructionTypes.I ||
+      (opcode === InstructionTypes.RMBex || opcode === InstructionTypes.IBex ||
         opcode === Instructions.lui || opcode === Instructions.auipc) -> RegWriteSource.ALUResult, // same as default
       (opcode === InstructionTypes.L)                                 -> RegWriteSource.Memory,
       (opcode === Instructions.jal || opcode === Instructions.jalr)   -> RegWriteSource.NextInstructionAddress
     )
   )
 
-  io.reg_write_enable := (opcode === InstructionTypes.RM) || (opcode === InstructionTypes.I) ||
+  io.reg_write_enable := (opcode === InstructionTypes.RMBex) || (opcode === InstructionTypes.IBex) ||
     (opcode === InstructionTypes.L) || (opcode === Instructions.auipc) || (opcode === Instructions.lui) ||
     (opcode === Instructions.jal) || (opcode === Instructions.jalr)
   io.reg_write_address := rd
