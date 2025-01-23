@@ -83,11 +83,23 @@ class ALU extends Module {
 
       io.result := ShiftL.io.A_out + io.op2
     }
+    is(ZbaFunctions.sh2add) {
+      ShiftL.io.A_in := op1
+      ShiftL.io.bits := 2.U
+
+      io.result := ShiftL.io.A_out + io.op2
+    }
+    is(ZbaFunctions.sh3add) {
+      ShiftL.io.A_in := op1
+      ShiftL.io.bits := 3.U
+
+      io.result := ShiftL.io.A_out + io.op2
+    }
 
     // Zbb
     is(ZbbFunctions.clz)  {
       CLZ.io.A_in := op1
-      
+
       io.result   := CLZ.io.A_out
     }
 
