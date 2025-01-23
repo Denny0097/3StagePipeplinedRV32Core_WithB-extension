@@ -10,11 +10,11 @@ import chisel3.util._
 import riscv.Parameters
 // ------- OPcode ---------
 object InstructionTypes {
-  val L  = "b0000011".U
+  val L     = "b0000011".U
   val IBex  = "b0010011".U
-  val S  = "b0100011".U
+  val S     = "b0100011".U
   val RMBex = "b0110011".U
-  val B  = "b1100011".U
+  val B     = "b1100011".U
 }
 
 object Instructions {
@@ -48,10 +48,6 @@ object InstructionsTypeI {
   val sri   = 5.U // or rori, orc.b, rev8, bexti
   val ori   = 6.U
   val andi  = 7.U
-  val Zba   = 8.U
-  val Zbb   = 9.U
-  val Zbc   = 10.U
-  val Zbz   = 11.U
 }
 
 object InstructionsTypeS {
@@ -74,13 +70,13 @@ object InstructionsTypeS {
 
 object InstructionsTypeR {
   val add_sub = 0.U
-  val sll     = 1.U // or rol, clmul, bclr, binv, bset, 
-  val slt     = 2.U // or sh1add, clmulr
-  val sltu    = 3.U // or clmulh
-  val xor     = 4.U // or sh2add, xnor, min, zext.h
-  val sr      = 5.U // or minu, ror, bext, 
-  val or      = 6.U // or sh3add, orn, max
-  val and     = 7.U // or andn, maxu
+  val sll     = 1.U
+  val slt     = 2.U 
+  val sltu    = 3.U 
+  val xor     = 4.U 
+  val sr      = 5.U 
+  val or      = 6.U 
+  val and     = 7.U 
 }
 
 object InstructionsTypeM {
@@ -112,45 +108,92 @@ object InstructionsTypeCSR {
   val csrrci = "b111".U
 }
 
-object Zbb1 { 
-  // shamt
-  val clz    = "b00000".U
-  val ctz    = "b00001".U
-  val cpop   = "b00010".U
-  val sextb  = "b00100".U
-  val sexth  = "b00101".U
-  val orcb   = "b00111".U
-  val rev8   = "b11000".U
+
+
+// -----------B-extension-----------
+
+// IB : B-extension' opcode == 0010011
+
+object IB1{
+  val slli                = "b0000000".U
+  val bseti               = "b0010100".U
+  val bclri               = "b0100100".U
+  val binvi               = "b0110100".U
+  val Zbb1                = "b0110000".U
+}
+
+object IB2{
+  val srli                = "b0000000".U
+  val srai                = "b0100000".U
+  val orcb                = "b0010100".U
+  val bexti               = "b0100100".U
+  val rori                = "b0110000".U
+  val rev8                = "b0110100".U
 }
 
 
-object Zbb2 { // funct3 === 101, 
-  // funct7
-  val rori    = "0110000".U
-  val ctz     = ""
-
+object Zbb1{
+  val clz   = 0.U
+  val ctz   = 1.U
+  val cpop  = 2.U
+  val sextb = 3.U
+  val sexth = 4.U
 }
 
-object InstructionsTypeB_Extesntion_Zba {
+
+// RB : B-extension' opcode == 0110011
+// funct7 of InstructionsTypeR sll, slt, xor, srl, or, and : 0; sra: 0100000
+object InstructionsTypeRorRB {
+  val InstructionsTypeR   = "b0000000".U
+  val sraorRB3            = "b0100000".U
+  val zexth               = "b0000100".U
+  val bset                = "b0010100".U
+  val binv                = "b0110100".U
+  val RB1                 = "b0000101".U
+  val RB2                 = "b0010000".U
+  val RB4                 = "b0100100".U
+  val RB5                 = "b0110000".U
+}
+
+object RB1 { 
+  // funct3
+  val clmul   = "b001".U
+  val clmulr  = "b010".U
+  val clmulh  = "b011".U
+  val min     = "b100".U  
+  val minu    = "b101".U
+  val max     = "b110".U
+  val maxu    = "b111".U
+}
+
+// Zba
+object RB2 {
+  // funct3
   val sh1add  = "b010".U
-  val sh1add  = "b100".U
-  val sh1add  = "b110".U
+  val sh2add  = "b100".U
+  val sh3add  = "b110".U
 }
 
-object InstructionsTypeB_Extesntion_Zbb {
-  // ...
+
+object RB3 {
+  // funct3
+  val sra   = "b101".U
+  val xnor  = "b100".U
+  val orn   = "b110".U
+  val andn  = "b111".U
 }
 
-object InstructionsTypeB_Extesntion_Zbc {
-  val sh1add  = "b001".U
-  // ...
+object RB4 {
+  val bclr  = "b001".U
+  val bext  = "b101".U
 }
 
-object InstructionsTypeB_Extesntion_Zbz {
-  val sh1add  = "b001".U
-  // ...
+object RB5 {
+  val rol  = "b001".U
+  val ror  = "b101".U
 }
-// B-extension
+
+// -----------B-extension-----------
 
 object InstructionsNop {
   val nop = 0x00000013L.U(Parameters.DataWidth)
