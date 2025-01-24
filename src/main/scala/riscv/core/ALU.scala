@@ -8,8 +8,23 @@ import chisel3.experimental.ChiselEnum
 import chisel3.util._
 import riscv.Parameters
 
+import riscv.core._
+
 object ALUFunctions extends ChiselEnum {
   val zero, add, sub, sll, slt, xor, or, and, srl, sra, sltu = Value
+  // Zba 
+  val sh1add, sh2add, sh3add = Value
+  // Zbb
+  val andn, orn, xnor, 
+      clz, ctz, cpop, 
+      max, maxu, min, minu,
+      sextb, sexth, zexth,
+      rol, ror, rori,
+      orcb, rev8  = Value
+  // Zbc
+  val clmul, clmulh, clmulr = Value
+  // Zbs
+  val bclr, bclri, bext, bexti, binv, binvi, bset, bseti = Value
 }
 
 class ALU extends Module {
@@ -23,25 +38,15 @@ class ALU extends Module {
   })
 
 
-  val ShiftL  = Module(new ShiftLeft(32))
-  val ShiftR  = Module(new ShiftRight(32))
-  val Add     = Module(new Adder(32))
-  val Invert  = Module(new InvertBits(32))
-  val AND     = Module(new ANDBits(32))
-  val OR      = Module(new ORBits(32))
-  val XOR     = Module(new XORBits(32))
-  val CLZ     = Module(new CountLeadingZeros(32))
-  val CTZ     = Module(new CountTrailingZeros(32))
-  val CPOP    = Module(new CountPopulation(32))
-  val MAX     = Module(new MaxInstruction(32))
-  val MAXU    = Module(new MaxUInstruction(32))
-  val MIN     = Module(new MinInstruction(32))
-  val MINU    = Module(new MinUInstruction(32))
-  val SEXTB   = Module(new SextB(32))
-  val SEXTH   = Module(new SextH(32))
-  val ZEXTH   = Module(new ZextH(32))
-  val ORCB    = Module(new OrcB(32))
-  val REV8    = Module(new Rev8(32))
+  // val ShiftR  = Module(new ShiftRightB(32))
+  // val ShiftL  = Module(new ShiftLeftB(32))
+  // val CLZ     = Module(new CountLeadingZeros(32))
+  // val CTZ     = Module(new CountTrailingZeros(32))
+  // val SEXTB   = Module(new SextB(32))
+  // val SEXTH   = Module(new SextH(32))
+  // val ZEXTH   = Module(new ZextH(32))
+  // val ORCB    = Module(new OrcB(32))
+  // val REV8    = Module(new Rev8(32))
 
 
   io.result := 0.U
@@ -77,42 +82,37 @@ class ALU extends Module {
       io.result := io.op1 < io.op2
     }
     // Zba
-    is(ZbaFunctions.sh1add) {
-      ShiftL.io.A_in := op1
-      ShiftL.io.bits := 1.U
-
-      io.result := ShiftL.io.A_out + io.op2
+    is(ALUFunctions.sh1add) {
+      io.result := B_Extension.ShiftLeftB(io.op1, 1.U)+ io.op2
     }
-    is(ZbaFunctions.sh2add) {
-      ShiftL.io.A_in := op1
-      ShiftL.io.bits := 2.U
+    // is(ALUFunctions.sh2add) {
+    //   ShiftL.io.A_in := io.op1
+    //   ShiftL.io.bits := 2.U
 
-      io.result := ShiftL.io.A_out + io.op2
-    }
-    is(ZbaFunctions.sh3add) {
-      ShiftL.io.A_in := op1
-      ShiftL.io.bits := 3.U
+    //   io.result := ShiftL.io.A_out + io.op2
+    // }
+    // is(ALUFunctions.sh3add) {
+    //   ShiftL.io.A_in := io.op1
+    //   ShiftL.io.bits := 3.U
 
-      io.result := ShiftL.io.A_out + io.op2
-    }
+    //   io.result := ShiftL.io.A_out + io.op2
+    // }
 
     // Zbb
-    is(ZbbFunctions.clz)  {
-      CLZ.io.A_in := op1
-
-      io.result   := CLZ.io.A_out
+    is(ALUFunctions.clz)  {
+      io.result   :=  B_Extension.CountLeadingZeros(io.op1)
     }
 
     // Zbc
 
     // Zbs
-    is(ZbsFunctions.bext) {
+    // is(ALUFunctions.bext) {
 
-      ShiftR.io.A_in := op1
-      ShiftR.io.bits := op2 & 31.U  // Mask RS2 to 5 bits (valid range: 0-31)
+    //   ShiftR.io.A_in := io.op1
+    //   ShiftR.io.bits := io.op2 & 31.U  // Mask RS2 to 5 bits (valid range: 0-31)
 
-      io.result := ShiftR.io.A_out & 1.U
-    }
+    //   io.result := ShiftR.io.A_out & 1.U
+    // }
   }
 
 }

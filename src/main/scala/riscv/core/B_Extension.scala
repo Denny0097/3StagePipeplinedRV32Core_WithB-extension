@@ -1,30 +1,38 @@
 
-package riscv
+package riscv.core
 
 import chisel3._
 import chisel3.util._
 
-object ZbaFunctions extends ChiselEnum {
-  val sh1add, sh1add, sh1add = Value
-}
+// object ZbaFunctions extends ChiselEnum {
+//   val sh1add, sh2add, sh3add = Value
+// }
 
-object ZbbFunctions extends ChiselEnum {
-  val   andn, orn, xnor, 
-        clz, ctz, cpop, 
-        max, maxu, min, minu,
-        sextb, sexth, zexth,
-        rol, ror, rori,
-        orcb, rev8  = Value
-}
+// object ZbbFunctions extends ChiselEnum {
+//   val   andn, orn, xnor, 
+//         clz, ctz, cpop, 
+//         max, maxu, min, minu,
+//         sextb, sexth, zexth,
+//         rol, ror, rori,
+//         orcb, rev8  = Value
+// }
 
-object ZbcFunctions extends ChiselEnum {
-  val clmul, clmulh, clmulr = Value
-}
+// object ZbcFunctions extends ChiselEnum {
+//   val clmul, clmulh, clmulr = Value
+// }
 
-object ZbsFunctions extends ChiselEnum {
-  val bclr, bclri, bext, bexti, binv, binvi, bset, bseti = Value
-}
+// object ZbsFunctions extends ChiselEnum {
+//   val bclr, bclri, bext, bexti, binv, binvi, bset, bseti = Value
+// }
 
+object B_Extension{
+
+  def ShiftRightB(A_in: UInt, bits: UInt): UInt = (A_in >> bits).asUInt
+  def ShiftLeftB(A_in: UInt, bits: UInt): UInt = (A_in << bits).asUInt
+
+  def CountLeadingZeros(A_in: UInt): UInt = PriorityEncoder(Reverse(A_in))
+
+}
 
 
 // Implementing n bit shift right
@@ -40,6 +48,7 @@ class ShiftRightB(N: Int) extends Module {
     io.A_out  := A_temp
 }
 
+
 // Implementing n bit shift left
 class ShiftLeftB(N: Int) extends Module {
   val io = IO(new Bundle {
@@ -53,56 +62,57 @@ class ShiftLeftB(N: Int) extends Module {
     io.A_out  := A_temp
 }
 
-// Implementing n bits bitwise inversion
-class InvertBits(N: Int) extends Module {
-  val io = IO(new Bundle {
-    val A_in = Input(UInt(N.W))
-    val A_out = Output(UInt(N.W))
-  })
 
-    val A_temp  = (~(io.A_in)).asUInt
+// // Implementing n bits bitwise inversion
+// class InvertBits(N: Int) extends Module {
+//   val io = IO(new Bundle {
+//     val A_in = Input(UInt(N.W))
+//     val A_out = Output(UInt(N.W))
+//   })
 
-    io.A_out  := A_temp
-}
+//     val A_temp  = (~(io.A_in)).asUInt
 
-// Implementing n bits bitwise AND
-class ANDBits(N: Int) extends Module {
-  val io = IO(new Bundle {
-    val A_in = Input(UInt(N.W))
-    val B_in = Input(UInt(N.W))
-    val and = Output(UInt(N.W))
-  })
+//     io.A_out  := A_temp
+// }
 
-    val and_temp  = (io.A_in & io.B_in).asUInt
+// // Implementing n bits bitwise AND
+// class ANDBits(N: Int) extends Module {
+//   val io = IO(new Bundle {
+//     val A_in = Input(UInt(N.W))
+//     val B_in = Input(UInt(N.W))
+//     val and = Output(UInt(N.W))
+//   })
 
-    io.and  := and_temp
-}
+//     val and_temp  = (io.A_in & io.B_in).asUInt
 
-// Implementing n bits bitwise OR
-class ORBits(N: Int) extends Module {
-  val io = IO(new Bundle {
-    val A_in = Input(UInt(N.W))
-    val B_in = Input(UInt(N.W))
-    val or = Output(UInt(N.W))
-  })
+//     io.and  := and_temp
+// }
 
-    val or_temp  = (io.A_in | io.B_in).asUInt
+// // Implementing n bits bitwise OR
+// class ORBits(N: Int) extends Module {
+//   val io = IO(new Bundle {
+//     val A_in = Input(UInt(N.W))
+//     val B_in = Input(UInt(N.W))
+//     val or = Output(UInt(N.W))
+//   })
 
-    io.or  := or_temp
-}
+//     val or_temp  = (io.A_in | io.B_in).asUInt
 
-// Implementing n bits bitwise XOR
-class XORBits(N: Int) extends Module {
-  val io = IO(new Bundle {
-    val A_in = Input(UInt(N.W))
-    val B_in = Input(UInt(N.W))
-    val xor = Output(UInt(N.W))
-  })
+//     io.or  := or_temp
+// }
 
-    val xor_temp  = (io.A_in ^ io.B_in).asUInt
+// // Implementing n bits bitwise XOR
+// class XORBits(N: Int) extends Module {
+//   val io = IO(new Bundle {
+//     val A_in = Input(UInt(N.W))
+//     val B_in = Input(UInt(N.W))
+//     val xor = Output(UInt(N.W))
+//   })
 
-    io.xor  := xor_temp
-}
+//     val xor_temp  = (io.A_in ^ io.B_in).asUInt
+
+//     io.xor  := xor_temp
+// }
 
 // Implementing n bits leading zero counter CLZ
 class CountLeadingZeros(N: Int) extends Module {

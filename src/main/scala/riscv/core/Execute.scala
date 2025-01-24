@@ -26,6 +26,7 @@ class Execute extends Module {
   val opcode = io.instruction(6, 0)
   val funct3 = io.instruction(14, 12)
   val funct7 = io.instruction(31, 25)
+  val shamt  = io.instruction(24, 20)
   val rd     = io.instruction(11, 7)
   val uimm   = io.instruction(19, 15)
 
@@ -35,6 +36,7 @@ class Execute extends Module {
   alu_ctrl.io.opcode := opcode
   alu_ctrl.io.funct3 := funct3
   alu_ctrl.io.funct7 := funct7
+  alu_ctrl.io.shamt  := shamt
 
   // lab3(Execute) begin
 

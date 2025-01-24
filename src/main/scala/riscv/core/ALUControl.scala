@@ -27,19 +27,21 @@ class ALUControl extends Module {
           InstructionsTypeI.addi  -> ALUFunctions.add,
           InstructionsTypeI.slli  -> MuxLookup(
             io.funct7,
-            ALUFunctions.sll,
+              ALUFunctions.zero,
               IndexedSeq(
-              IB1.bseti -> ZbsFunctions.bseti,
-              IB1.binvi -> ZbsFunctions.binvi,
-              IB1.bclri -> ZbsFunctions.bclri,
+              IB1.slli  -> ALUFunctions.sll,
+              IB1.bseti -> ALUFunctions.bseti,
+              IB1.binvi -> ALUFunctions.binvi,
+              IB1.bclri -> ALUFunctions.bclri,
               IB1.Zbb1 -> MuxLookup(
-                shamt,
-                ZbbFunctions.clz,
+                io.shamt,
+                ALUFunctions.zero,
                 IndexedSeq(
-                  Zbb1.ctz -> ZbbFunctions.ctz,
-                  Zbb1.cpop ->ZbbFunctions.cpop,
-                  Zbb1.sextb->ZbbFunctions.sextb,
-                  Zbb1.sexth->ZbbFunctions.sexth
+                  Zbb1.clz -> ALUFunctions.clz,
+                  Zbb1.ctz -> ALUFunctions.ctz,
+                  Zbb1.cpop ->ALUFunctions.cpop,
+                  Zbb1.sextb->ALUFunctions.sextb,
+                  Zbb1.sexth->ALUFunctions.sexth
                 )
               )
             )
@@ -51,74 +53,77 @@ class ALUControl extends Module {
           InstructionsTypeI.andi  -> ALUFunctions.and,
           InstructionsTypeI.sri   -> MuxLookup(
             io.funct7, 
-            ALUFunctions.srl, 
+            ALUFunctions.zero, 
             IndexedSeq(
+              IB2.srli -> ALUFunctions.srl,
               IB2.srai -> ALUFunctions.sra,
-              IB2.rori -> ZbbFunctions.rori,
-              IB2.rev8 -> ZbbFunctions.rev8,
-              IB2.orcb -> ZbbFunctions.orcb,
-              IB2.bexti-> ZbsFunctions.bexti
+              IB2.rori -> ALUFunctions.rori,
+              IB2.rev8 -> ALUFunctions.rev8,
+              IB2.orcb -> ALUFunctions.orcb,
+              IB2.bexti-> ALUFunctions.bexti
             )
           )
         ),
       )
     }
 
-    is(InstructionTypes.RM) {
+    is(InstructionTypes.RMBex) {
       io.alu_funct := MuxLookup(
         io.funct7,
-        DontCare,
-        InstructionsTypeRorRB.InstructionsTypeR -> MuxLookup(
-          io.funct3,
-          ALUFunctions.zero,
-          IndexedSeq(
-            InstructionsTypeR.add_sub -> Mux(io.funct7(5), ALUFunctions.sub, ALUFunctions.add),
-            InstructionsTypeR.sll     -> ALUFunctions.sll,
-            InstructionsTypeR.slt     -> ALUFunctions.slt,
-            InstructionsTypeR.sltu    -> ALUFunctions.sltu,
-            InstructionsTypeR.xor     -> ALUFunctions.xor,
-            InstructionsTypeR.or      -> ALUFunctions.or,
-            InstructionsTypeR.and     -> ALUFunctions.and,
-            InstructionsTypeR.sr      -> ALUFunctions.srl
+        ALUFunctions.zero,
+        IndexedSeq(
+          InstructionsTypeRorRB.InstructionsTypeR -> MuxLookup(
+            io.funct3,
+            ALUFunctions.zero,
+            IndexedSeq(
+              InstructionsTypeR.add_sub -> Mux(io.funct7(5), ALUFunctions.sub, ALUFunctions.add),
+              InstructionsTypeR.sll     -> ALUFunctions.sll,
+              InstructionsTypeR.slt     -> ALUFunctions.slt,
+              InstructionsTypeR.sltu    -> ALUFunctions.sltu,
+              InstructionsTypeR.xor     -> ALUFunctions.xor,
+              InstructionsTypeR.or      -> ALUFunctions.or,
+              InstructionsTypeR.and     -> ALUFunctions.and,
+              InstructionsTypeR.sr      -> ALUFunctions.srl
+            ),
           ),
-        ),
-        InstructionsTypeRorRB.zexth   -> ZbbFunctions.zexth,
-        InstructionsTypeRorRB.bset    -> ZbsFunctions.bset,
-        InstructionsTypeRorRB.binv    -> ZbsFunctions.binv,
-        InstructionsTypeRorRB.RB1     -> MuxLookup(
-          io.funct3,
-          ALUFunctions.zero,
-          IndexedSeq(
-            RB1.clmul  ->  ZbcFunctions.clmul,
-            RB1.clmulr ->  ZbcFunctions.clmulr,
-            RB1.clmulh ->  ZbcFunctions.clmulh,
-            RB1.min    ->  ZbbFunctions.min, 
-            RB1.minu   ->  ZbbFunctions.minu, 
-            RB1.max    ->  ZbbFunctions.max, 
-            RB1.maxu   ->  ZbbFunctions.maxu
-          )
-        ),
-        InstructionsTypeRorRB.RB2     -> MuxLookup (
-          io.funct3,
-          ALUFunctions.zero,
-          IndexedSeq(
-            RB2.sh1add ->  ZbaFunctions.sh1add,
-            RB2.sh2add ->  ZbaFunctions.sh2add,
-            RB2.sh3add ->  ZbaFunctions.sh3add
-          )
-        ),
-        InstructionsTypeRorRB.sraorRB3 -> MuxLookup(
-          io.funct3,
-          ALUFunctions.zero,
-          IndexedSeq(
-            RB3.sra    ->  ALUFunctions.sra,
-            RB3.xnor   ->  ZbbFunctions.xnor,
-            RB3.orn    ->  ZbbFunctions.orn,
-            RB3.andn   ->  ZbbFunctions.andn   
-          )
-        ),
-        InstructionsTypeRorRB.RB4     -> Mux(io.funct3(2), ZbsFunctions.bclr, ZbsFunctions.bext),
-        InstructionsTypeRorRB.RB5     -> Mux(io.funct3(2), ZbsFunctions.rol, ALUFunctions.ror),
+          InstructionsTypeRorRB.zexth   -> ALUFunctions.zexth,
+          InstructionsTypeRorRB.bset    -> ALUFunctions.bset,
+          InstructionsTypeRorRB.binv    -> ALUFunctions.binv,
+          InstructionsTypeRorRB.RB1     -> MuxLookup(
+            io.funct3,
+            ALUFunctions.zero,
+            IndexedSeq(
+              RB1.clmul  ->  ALUFunctions.clmul,
+              RB1.clmulr ->  ALUFunctions.clmulr,
+              RB1.clmulh ->  ALUFunctions.clmulh,
+              RB1.min    ->  ALUFunctions.min, 
+              RB1.minu   ->  ALUFunctions.minu, 
+              RB1.max    ->  ALUFunctions.max, 
+              RB1.maxu   ->  ALUFunctions.maxu
+            )
+          ),
+          InstructionsTypeRorRB.RB2     -> MuxLookup (
+            io.funct3,
+            ALUFunctions.zero,
+            IndexedSeq(
+              RB2.sh1add ->  ALUFunctions.sh1add,
+              RB2.sh2add ->  ALUFunctions.sh2add,
+              RB2.sh3add ->  ALUFunctions.sh3add
+            )
+          ),
+          InstructionsTypeRorRB.sraorRB3 -> MuxLookup(
+            io.funct3,
+            ALUFunctions.zero,
+            IndexedSeq(
+              RB3.sra    ->  ALUFunctions.sra,
+              RB3.xnor   ->  ALUFunctions.xnor,
+              RB3.orn    ->  ALUFunctions.orn,
+              RB3.andn   ->  ALUFunctions.andn   
+            )
+          ),
+          InstructionsTypeRorRB.RB4     -> Mux(io.funct3(2), ALUFunctions.bclr, ALUFunctions.bext),
+          InstructionsTypeRorRB.RB5     -> Mux(io.funct3(2), ALUFunctions.rol, ALUFunctions.ror),
+        )
       )
     }
     
