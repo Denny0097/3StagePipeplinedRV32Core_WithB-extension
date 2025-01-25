@@ -37,6 +37,8 @@ class ALU extends Module {
     val result = Output(UInt(Parameters.DataWidth))
   })
 
+  val signed_op1 = io.op1.asSInt
+  val signed_op2 = io.op2.asSInt
 
   // val ShiftR  = Module(new ShiftRightB(32))
   // val ShiftL  = Module(new ShiftLeftB(32))
@@ -81,38 +83,116 @@ class ALU extends Module {
     is(ALUFunctions.sltu) {
       io.result := io.op1 < io.op2
     }
+    
     // Zba
     is(ALUFunctions.sh1add) {
       io.result := B_Extension.ShiftLeftB(io.op1, 1.U)+ io.op2
     }
-    // is(ALUFunctions.sh2add) {
-    //   ShiftL.io.A_in := io.op1
-    //   ShiftL.io.bits := 2.U
-
-    //   io.result := ShiftL.io.A_out + io.op2
-    // }
-    // is(ALUFunctions.sh3add) {
-    //   ShiftL.io.A_in := io.op1
-    //   ShiftL.io.bits := 3.U
-
-    //   io.result := ShiftL.io.A_out + io.op2
-    // }
+    is(ALUFunctions.sh2add) {
+      io.result := B_Extension.ShiftLeftB(io.op1, 2.U)+ io.op2
+    }
+    is(ALUFunctions.sh3add) {
+      io.result := B_Extension.ShiftLeftB(io.op1, 3.U)+ io.op2
+    }
 
     // Zbb
+    is(ALUFunctions.andn) {
+      io.result := io.op1 & ~(io.op2)
+    }
+    is(ALUFunctions.orn) {
+      io.result := io.op1 | ~(io.op2)
+    }
+    is(ALUFunctions.xnor) {
+      io.result := ~(io.op1) & io.op2
+    }
+
     is(ALUFunctions.clz)  {
       io.result   :=  B_Extension.CountLeadingZeros(io.op1)
     }
+    is(ALUFunctions.ctz)  {
+      io.result   :=  B_Extension.CountTrailingZeros(io.op1)
+    }
+    is(ALUFunctions.cpop)  {
+      io.result   :=  B_Extension.CountPop(io.op1)
+    }
+
+    is(ALUFunctions.max)  {
+      io.result   :=  B_Extension.Max(signed_op1, signed_op1).asUInt
+    }
+    is(ALUFunctions.maxu)  {
+      io.result   :=  B_Extension.UnsignMax(io.op1, io.op2)
+    }
+    is(ALUFunctions.min)  {
+      io.result   :=  B_Extension.Min(signed_op1, signed_op1).asUInt
+    }
+    is(ALUFunctions.minu)  {
+      io.result   :=  B_Extension.UnsignMin(io.op1, io.op2)
+    }
+
+    is(ALUFunctions.sextb)  {
+      io.result   :=  B_Extension.signExtendedB(io.op1)
+    }
+    is(ALUFunctions.sexth)  {
+      io.result   :=  B_Extension.signExtendedH(io.op1)
+    }
+    is(ALUFunctions.zexth)  {
+      io.result   :=  B_Extension.zeroExtendedH(io.op1)
+    }
+
+    is(ALUFunctions.rol)  {
+      io.result   :=  B_Extension.RotateLeft(io.op1, io.op2)
+    }
+    is(ALUFunctions.ror)  {
+      io.result   :=  B_Extension.RotateRight(io.op1, io.op2)
+    }
+    is(ALUFunctions.rori)  {// op2 from shamt
+      io.result   :=  B_Extension.RotateRight(io.op1, io.op2)
+    }
+
+    is(ALUFunctions.orcb)  {
+      io.result   :=  B_Extension.BitWiseORCombineByte(io.op1)
+    }
+    is(ALUFunctions.rev8)  {
+      io.result   :=  B_Extension.ByteReverseRegister(io.op1)
+    }
+
 
     // Zbc
+    is(ALUFunctions.clmul)  {
+      io.result   :=B_Extension.CarryLessMultLow(io.op1, io.op2)
+    }
+    is(ALUFunctions.clmulh)  {
+      io.result   :=B_Extension.CarryLessMultHigh(io.op1, io.op2)
+    }
+    is(ALUFunctions.clmulr)  {
+      io.result   :=B_Extension.CarryLessMultReversed(io.op1, io.op2)
+    }
+
 
     // Zbs
-    // is(ALUFunctions.bext) {
-
-    //   ShiftR.io.A_in := io.op1
-    //   ShiftR.io.bits := io.op2 & 31.U  // Mask RS2 to 5 bits (valid range: 0-31)
-
-    //   io.result := ShiftR.io.A_out & 1.U
-    // }
+    is(ALUFunctions.bclr)  {
+      io.result   :=B_Extension.SingleBitClear(io.op1, io.op2)
+    }
+    is(ALUFunctions.bclri)  {
+      io.result   :=B_Extension.SingleBitClear(io.op1, io.op2)
+    }
+    is(ALUFunctions.bext)  {
+      io.result   :=B_Extension.SingleBitExtract(io.op1, io.op2)
+    }
+    is(ALUFunctions.bexti)  {
+      io.result   :=B_Extension.SingleBitExtract(io.op1, io.op2)
+    }
+    is(ALUFunctions.binv)  {
+      io.result   :=B_Extension.SingleBitInvert(io.op1, io.op2)
+    }
+    is(ALUFunctions.binvi)  {
+      io.result   :=B_Extension.SingleBitInvert(io.op1, io.op2)
+    }
+    is(ALUFunctions.bset)  {
+      io.result   :=B_Extension.SingleBitSet(io.op1, io.op2)
+    }
+    is(ALUFunctions.bseti)  {
+      io.result   :=B_Extension.SingleBitSet(io.op1, io.op2)
+    }
   }
-
 }
