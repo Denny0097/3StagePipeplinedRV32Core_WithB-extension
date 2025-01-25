@@ -46,7 +46,7 @@ object B_Extension{
     val shiftAmount = op2(4, 0) 
     Cat(op1 << shiftAmount, op1 >> (32.U - shiftAmount))
   }
-    def RotateRight(op1: UInt, op2: UInt): UInt = {
+  def RotateRight(op1: UInt, op2: UInt): UInt = {
     val shiftAmount = op2(4, 0) 
     Cat(op1 >> shiftAmount, op1 << (32.U - shiftAmount))
   }
@@ -63,13 +63,9 @@ object B_Extension{
     inputBytes.reduce(_ | _)
   }
   def ByteReverseRegister(op1: UInt): UInt = {
-    // 計算字節數量
     val numBytes = 32 / 8
-    // 提取每個字節
     val byteOrder = (0 until numBytes).map(i => op1(8 * (i + 1) - 1, 8 * i))
-    // 反轉字節順序並拼接
     val reverseOrder = byteOrder.reverse
-    // 將反轉後的字節轉換為UInt並返回
     reverseOrder.foldLeft(0.U)((acc, byte) => (acc << 8) | byte)
   }
    
