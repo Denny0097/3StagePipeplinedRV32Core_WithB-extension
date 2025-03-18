@@ -1,4 +1,4 @@
-# Construct a single-cycle RISC-V CPU with Chisel
+# Construct a 3-stage RISC-V CPU with B-extension by Chisel
 
 
 ## [3 stage pipeline](https://github.com/Denny0097/3StagePipeplinedRV32Core_WithB-extension/tree/3-Stage-Pipeline)
