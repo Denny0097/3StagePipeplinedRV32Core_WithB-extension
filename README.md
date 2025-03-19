@@ -30,7 +30,8 @@ val reg_write_address   = UInt(Parameters.PhysicalRegisterAddrWidth)
 }
 ```
 ### EX stage(REG EX)
-![截圖 2025-01-19 晚上10.44.43](https://hackmd.io/_uploads/BJ61gcqDJe.png =600x)
+![image](https://github.com/user-attachments/assets/dfd2457e-3a91-4e11-bc1b-49b044c00606)
+
 
 ### EX_WB register
 
